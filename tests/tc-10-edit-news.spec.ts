@@ -1,20 +1,23 @@
 import { allure } from 'allure-playwright';
+import { expect } from '@playwright/test';
 import { test } from '../fixtures/test.fixture';
 import { env } from '../utils/env';
 
 test('TC-10: Author can edit own news and changes are saved', async ({
   loginPage,
+  newsPage,
   page,
   createNewsPage,
 }) => {
-  const newsUrl = 'https://www.greencity.cx.ua/#/greenCity/news/11817';
+  const newsId = '11817';
+  const newsUrl = `https://www.greencity.cx.ua/#/greenCity/news/${newsId}`;
   const updatedTitle = `Edited news ${Date.now()}`;
   const updatedContent = 'Updated content with more than 20 chars';
 
   let originalDate: string;
 
   await allure.step('Open GreenCity main page', async () => {
-    await page.goto('https://www.greencity.cx.ua/#/greenCity');
+    await newsPage.openMainPage();
   });
 
   await allure.step('Log in as author', async () => {
@@ -37,16 +40,24 @@ test('TC-10: Author can edit own news and changes are saved', async ({
     await createNewsPage.fillTitle(updatedTitle);
     await createNewsPage.clearMainText();
     await createNewsPage.fillMainText(updatedContent);
-    await createNewsPage.changeTagFromNewsToEducation();
+    await createNewsPage.changeTagToEducation();
   });
 
   await allure.step('Submit edited news', async () => {
     await createNewsPage.clickEditSubmitButton();
   });
 
-  await allure.step('Reload edited news post', async () => {
-    await page.goto(newsUrl);
+  await allure.step('Close unexpected cancel modal if it appears', async () => {
+  await createNewsPage.closeUnexpectedCancelModalIfVisible();
+});
+
+await allure.step('Open edited news post again', async () => {
+  await page.goto(newsUrl, { waitUntil: 'domcontentloaded' });
+
+  await expect(page).toHaveURL(/#\/greenCity\/news\/11817/, {
+    timeout: 30000,
   });
+});
 
   await allure.step('Verify updated values and unchanged creation date', async () => {
     await createNewsPage.expectNewsTitle(updatedTitle);

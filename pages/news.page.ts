@@ -7,37 +7,31 @@ export class NewsPage extends BasePage {
   }
 
   async openMainPage(): Promise<void> {
-    await this.open('/#/greenCity');
+    await this.openGreenCity();
 
-    await expect(
-      this.page.locator('app-root')
-    ).toBeVisible({ timeout: 30000 });
+    await expect(this.page).toHaveURL(/#\/greenCity/);
   }
 
   async openNewsPage(): Promise<void> {
-    await this.open('/#/greenCity/news');
+    await this.openEcoNews();
 
-    await expect(
-      this.page
-    ).toHaveURL(/greenCity\/news/);
+    await expect(this.page).toHaveURL(/#\/greenCity\/news$/);
   }
 
   async openCreateNewsPage(): Promise<void> {
-    await this.open('/#/greenCity/news/create-news');
+    await this.openCreateNews();
 
-    await expect(
-      this.page
-    ).toHaveURL(/greenCity\/news\/create-news/);
+    await expect(this.page).toHaveURL(/#\/greenCity\/news\/create-news/);
 
     await expect(
       this.page.locator("textarea[formcontrolname='title']")
     ).toBeVisible({ timeout: 30000 });
   }
-  async expectNewsVisible(title: string): Promise<void> {
-  await this.openNewsPage();
 
-  await expect(
-    this.page.getByText(title)
-  ).toBeVisible({ timeout: 30000 });
-}
+  async openExistingNewsPage(newsId: string): Promise<void> {
+    await this.openExistingNews(newsId);
+
+    await expect(this.page).toHaveURL(new RegExp(`#\\/greenCity\\/news\\/${newsId}`));
+  }
+  
 }

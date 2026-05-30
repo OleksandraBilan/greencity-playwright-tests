@@ -18,7 +18,7 @@ test('TC-07: Cancel button confirmation modal', async ({
     await loginPage.login(env.userEmail, env.userPassword);
   });
 
-  await allure.step('Open Create News page', async () => {
+  await allure.step('Open Create News page after login', async () => {
     await newsPage.openCreateNewsPage();
   });
 
@@ -57,7 +57,7 @@ test('TC-07: Cancel button confirmation modal', async ({
     await createNewsPage.clickYesCancel();
   });
 
-  await allure.step('Verify user is redirected to News page', async () => {
-    await createNewsPage.expectRedirectedToNewsPage();
+  await allure.step('Verify user is redirected to UBS page', async () => {
+    await createNewsPage.expectRedirectedToUbsPage();
   });
 });

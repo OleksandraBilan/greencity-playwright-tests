@@ -1,16 +1,25 @@
 import { Page } from '@playwright/test';
 
 export class BasePage {
-  protected readonly page: Page;
-
-  constructor(page: Page) {
-    this.page = page;
-  }
+  constructor(protected readonly page: Page) {}
 
   async open(path: string): Promise<void> {
-    await this.page.goto(path, {
-      waitUntil: 'domcontentloaded',
-      timeout: 60000,
-    });
+    await this.page.goto(path);
+  }
+
+  async openGreenCity(): Promise<void> {
+    await this.page.goto('https://www.greencity.cx.ua/#/greenCity');
+  }
+
+  async openEcoNews(): Promise<void> {
+    await this.page.goto('https://www.greencity.cx.ua/#/greenCity/news');
+  }
+
+  async openCreateNews(): Promise<void> {
+    await this.page.goto('https://www.greencity.cx.ua/#/greenCity/news/create-news');
+  }
+
+  async openExistingNews(newsId: string): Promise<void> {
+    await this.page.goto(`https://www.greencity.cx.ua/#/greenCity/news/${newsId}`);
   }
 }

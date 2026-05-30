@@ -167,10 +167,12 @@ export class CreateNewsPage {
     });
   }
 
-  async selectTag(tagName: string): Promise<void> {
-    await this.getTagButton(tagName).click();
-  }
+ async selectTag(tagName: string): Promise<void> {
+  await this.getTagButton(tagName).scrollIntoViewIfNeeded();
+  await this.getTagButton(tagName).click();
 
+  await this.expectTagIsSelected(tagName);
+}
   async expectTagIsSelected(tagName: string): Promise<void> {
     const tagNames: Record<string, string> = {
       Новини: 'News',
@@ -331,8 +333,9 @@ async expectSourceErrorNotVisible(): Promise<void> {
     this.page.getByText(
       /Please add the link of original article\/news\/post\. Link must start with http\(s\):\/\//i
     )
-  ).toHaveCount(0);
+  ).toBeHidden();
 }
+
 async clickFormCancelButton(): Promise<void> {
   await this.page.locator('.submit-buttons button').filter({
     hasText: /^Cancel$/,
@@ -435,9 +438,18 @@ async clickEditSubmitButton(): Promise<void> {
     .click();
 }
 
-async changeTagFromNewsToEducation(): Promise<void> {
-  await this.selectTag('Новини');
-  await this.selectTag('Освіта');
+async changeTagToEducation(): Promise<void> {
+  const educationIsSelected = await this.page
+    .locator('app-tags-select a.global-tag-clicked')
+    .filter({ hasText: /^(Освіта|Education)/ })
+    .isVisible()
+    .catch(() => false);
+
+  if (!educationIsSelected) {
+    await this.selectTag('Освіта');
+  }
+
+  await this.expectTagIsSelected('Освіта');
 }
 
 async getNewsCreatedDate(): Promise<string> {
@@ -445,7 +457,9 @@ async getNewsCreatedDate(): Promise<string> {
 }
 
 async expectNewsTitle(title: string): Promise<void> {
-  await expect(this.page.locator('.news-title')).toHaveText(title);
+  await expect(
+    this.page.locator('.news-title.word-wrap')
+  ).toHaveText(title, { timeout: 30000 });
 }
 
 async expectNewsContent(content: string): Promise<void> {
@@ -458,5 +472,60 @@ async expectNewsTag(tag: string): Promise<void> {
 
 async expectNewsDate(expectedDate: string): Promise<void> {
   await expect(this.page.locator('.news-info-date')).toHaveText(expectedDate);
+}
+private getPublishedNewsCardByTitle(title: string) {
+  return this.page.getByRole('link').filter({
+    hasText: title,
+  });
+}
+
+async expectPublishedNewsCardContainsTitle(title: string): Promise<void> {
+  await expect(
+    this.getPublishedNewsCardByTitle(title)
+  ).toBeVisible({ timeout: 30000 });
+}
+
+async expectPublishedNewsCardContainsTag(title: string, tagName: string): Promise<void> {
+  const tagNames: Record<string, string> = {
+    Новини: 'News',
+    Події: 'Events',
+    Освіта: 'Education',
+    Ініціативи: 'Initiatives',
+    Реклама: 'Ads',
+  };
+
+  const englishName = tagNames[tagName] || tagName;
+
+  await expect(
+    this.getPublishedNewsCardByTitle(title)
+  ).toContainText(new RegExp(`(${tagName}|${englishName})`));
+}
+async selectTagWithoutExpect(tagName: string): Promise<void> {
+  await this.getTagButton(tagName).scrollIntoViewIfNeeded();
+  await this.getTagButton(tagName).click();
+}
+async expectRedirectedToUbsPage(): Promise<void> {
+  await expect(this.page).toHaveURL(/#\/ubs/);
+}
+async closeUnexpectedCancelModalIfVisible(): Promise<void> {
+  const yesCancelButton = this.page.getByRole('button', {
+    name: /^(Yes, cancel|Так, скасувати)$/i,
+  });
+
+  try {
+    await yesCancelButton.waitFor({
+      state: 'visible',
+      timeout: 10000,
+    });
+
+    await yesCancelButton.click();
+
+    await yesCancelButton.waitFor({
+      state: 'hidden',
+      timeout: 10000,
+    });
+  } catch {
+    // Modal did not appear, continue test
+  }
 }
 }

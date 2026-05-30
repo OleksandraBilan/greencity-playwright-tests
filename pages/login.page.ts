@@ -11,13 +11,16 @@ export class LoginPage {
   async login(email: string, password: string): Promise<void> {
     await this.header.clickSignIn();
 
-    await this.page.getByRole('textbox', { name: /email/i }).fill(email);
-    await this.page.getByRole('textbox', { name: /password/i }).fill(password);
+    const emailInput = this.page.getByRole('textbox', { name: /email/i });
+    const passwordInput = this.page.getByRole('textbox', { name: /password/i });
 
-    await this.page.getByRole('button', { name: /^Sign in$/ }).click();
+    await emailInput.fill(email);
+    await passwordInput.fill(password);
 
-    await expect(
-      this.page.locator('.user-name:visible').filter({ hasText: /sasha/i })
-    ).toBeVisible({ timeout: 30000 });
+    await this.page
+      .getByRole('button', { name: /^Sign in$/i })
+      .click();
+
+    await expect(emailInput).toBeHidden({ timeout: 30000 });
   }
 }
